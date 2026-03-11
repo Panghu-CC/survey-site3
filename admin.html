@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理员后台 - 匿名排班满意度调研</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="container mt-5">
+  <!-- 登录区域 -->
+  <div id="loginSection" class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">管理员登录</div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label">账号</label>
+            <input type="text" class="form-control" id="adminUser" placeholder="请输入管理员账号">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">密码</label>
+            <input type="password" class="form-control" id="adminPwd" placeholder="请输入管理员密码">
+          </div>
+          <button id="loginBtn" class="btn btn-primary w-100">登录</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 管理员后台区域 -->
+  <div id="adminSection" class="d-none">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2>管理员后台</h2>
+      <button id="logoutBtn" class="btn btn-danger">退出登录</button>
+    </div>
+
+    <ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="dataTab" data-bs-toggle="tab" data-bs-target="#dataContent" type="button" role="tab">数据汇总</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="exportTab" data-bs-toggle="tab" data-bs-target="#exportContent" type="button" role="tab">数据导出</button>
+      </li>
+    </ul>
+
+    <div class="tab-content" id="adminTabContent">
+      <!-- 数据汇总 -->
+      <div class="tab-pane fade show active" id="dataContent" role="tabpanel">
+        <div class="card">
+          <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+              <span>调研数据汇总（匿名化）</span>
+              <button id="refreshBtn" class="btn btn-sm btn-primary">刷新数据</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <p>已填写人数：<span id="filledCount" class="fw-bold">0</span></p>
+            <h5 class="mt-4">排班频率满意度分布</h5>
+            <table class="table table-bordered mt-2">
+              <thead>
+                <tr>
+                  <th>满意度等级</th>
+                  <th>人数</th>
+                  <th>占比</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>非常满意</td><td id="count1">0</td><td id="rate1">0%</td></tr>
+                <tr><td>满意</td><td id="count2">0</td><td id="rate2">0%</td></tr>
+                <tr><td>一般</td><td id="count3">0</td><td id="rate3">0%</td></tr>
+                <tr><td>不满意</td><td id="count4">0</td><td id="rate4">0%</td></tr>
+                <tr><td>非常不满意</td><td id="count5">0</td><td id="rate5">0%</td></tr>
+              </tbody>
+            </table>
+
+            <h5 class="mt-4">排班合理性分布</h5>
+            <table class="table table-bordered mt-2">
+              <thead>
+                <tr>
+                  <th>合理性等级</th>
+                  <th>人数</th>
+                  <th>占比</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>非常合理</td><td id="rCount1">0</td><td id="rRate1">0%</td></tr>
+                <tr><td>合理</td><td id="rCount2">0</td><td id="rRate2">0%</td></tr>
+                <tr><td>一般</td><td id="rCount3">0</td><td id="rRate3">0%</td></tr>
+                <tr><td>不合理</td><td id="rCount4">0</td><td id="rRate4">0%</td></tr>
+                <tr><td>非常不合理</td><td id="rCount5">0</td><td id="rRate5">0%</td></tr>
+              </tbody>
+            </table>
+
+            <h5 class="mt-4">开放性建议汇总</h5>
+            <div id="suggestionsList" class="mt-2">暂无数据</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 数据导出 -->
+      <div class="tab-pane fade" id="exportContent" role="tabpanel">
+        <div class="card">
+          <div class="card-header">数据导出</div>
+          <div class="card-body">
+            <p>导出所有填写数据的汇总报表（Excel格式），包含匿名化的所有答案</p>
+            <button id="exportExcelBtn" class="btn btn-primary">导出Excel汇总报表</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+  // 管理员账号密码（默认）
+  const ADMIN_USER = 'admin';
+  const ADMIN_PWD = 'admin123';
+
+  // 页面加载时检查登录状态
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('loginBtn').addEventListener('click', login);
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+    document.getElementById('refreshBtn').addEventListener('click', loadDataSummary);
+    document.getElementById('exportExcelBtn').addEventListener('click', exportExcel);
+
+    if (localStorage.getItem('adminLoggedIn') === 'true') {
+      showAdminSection();
+      loadDataSummary(); // 加载数据
+    }
+  });
+
+  // 登录
+  function login() {
+    const user = document.getElementById('adminUser').value;
+    const pwd = document.getElementById('adminPwd').value;
+    if (!user || !pwd) {
+      alert('账号和密码不能为空！');
+      return;
+    }
+    if (user === ADMIN_USER && pwd === ADMIN_PWD) {
+      localStorage.setItem('adminLoggedIn', 'true');
+      showAdminSection();
+      loadDataSummary(); // 登录后立即加载数据
+    } else {
+      alert('账号或密码错误！');
+    }
+  }
+
+  // 退出登录
+  function logout() {
+    localStorage.removeItem('adminLoggedIn');
+    document.getElementById('adminSection').classList.add('d-none');
+    document.getElementById('loginSection').classList.remove('d-none');
+    document.getElementById('adminUser').value = '';
+    document.getElementById('adminPwd').value = '';
+  }
+
+  // 显示管理员后台
+  function showAdminSection() {
+    document.getElementById('loginSection').classList.add('d-none');
+    document.getElementById('adminSection').classList.remove('d-none');
+  }
+
+  // 核心：加载并显示所有数据
+  function loadDataSummary() {
+    // 读取localStorage中的所有问卷数据
+    const allSurveyData = JSON.parse(localStorage.getItem('allSurveyData')) || [];
+    const total = allSurveyData.length;
+
+    // 更新已填写人数
+    document.getElementById('filledCount').textContent = total;
+
+    // 统计排班频率满意度
+    const satisfactionCount = {
+      '非常满意': 0, '满意': 0, '一般': 0, '不满意': 0, '非常不满意': 0
+    };
+    // 统计排班合理性
+    const rationalityCount = {
+      '非常合理': 0, '合理': 0, '一般': 0, '不合理': 0, '非常不合理': 0
+    };
+
+    allSurveyData.forEach(item => {
+      // 统计满意度
+      if (satisfactionCount.hasOwnProperty(item.satisfaction1)) {
+        satisfactionCount[item.satisfaction1]++;
+      }
+      // 统计合理性
+      if (rationalityCount.hasOwnProperty(item.satisfaction2)) {
+        rationalityCount[item.satisfaction2]++;
+      }
+    });
+
+    // 更新满意度统计
+    document.getElementById('count1').textContent = satisfactionCount['非常满意'];
+    document.getElementById('rate1').textContent = total ? `${((satisfactionCount['非常满意']/total)*100).toFixed(1)}%` : '0%';
+    document.getElementById('count2').textContent = satisfactionCount['满意'];
+    document.getElementById('rate2').textContent = total ? `${((satisfactionCount['满意']/total)*100).toFixed(1)}%` : '0%';
+    document.getElementById('count3').textContent = satisfactionCount['一般'];
+    document.getElementById('rate3').textContent = total ? `${((satisfactionCount['一般']/total)*100).toFixed(1)}%` : '0%';
+    document.getElementById('count4').textContent = satisfactionCount['不满意'];
+    document.getElementById('rate4').textContent = total ? `${((satisfactionCount['不满意']/total)*100).toFixed(1)}%` : '0%';
+    document.getElementById('count5').textContent = satisfactionCount['非常不满意'];
+    document.getElementById('rate5').textContent = total ? `${((satisfactionCount['非常不满意']/total)*100).toFixed(1)}%` : '0%';
+
+    // 更新合理性统计
+    document.getElementById('rCount1').textContent = rationalityCount['非常合理'];
+    document.getElementById('rRate1').textContent = total ? `${((rationalityCount['非常合理']/total)*100).toFixed(1)}%` : '0%';
+    document.getElementById('rCount2').textContent = rationalityCount['合理'];
+    document.getElementById('rRate2').textContent = total ? `${((rationalityCount['合理']/total)*100).toFixed(1)}%` : '0%';
+    document.getElementById('rCount3').textContent = rationalityCount['一般'];
+    document.getElementById('rRate3').textContent = total ? `${((rationalityCount['一般']/total)*100).toFixed(1)}%` : '0%';
+    document.getElementById('rCount4').textContent = rationalityCount['不合理'];
+    document.getElementById('rRate4').textContent = total ? `${((rationalityCount['不合理']/total)*100).toFixed(1)}%` : '0%';
+    document.getElementById('rCount5').textContent = rationalityCount['非常不合理'];
+    document.getElementById('rRate5').textContent = total ? `${((rationalityCount['非常不合理']/total)*100).toFixed(1)}%` : '0%';
+
+    // 更新开放性建议
+    const suggestionsList = document.getElementById('suggestionsList');
+    if (total === 0) {
+      suggestionsList.innerHTML = '暂无数据';
+      return;
+    }
+
+    let suggestionsHtml = '';
+    allSurveyData.forEach((item, idx) => {
+      suggestionsHtml += `
+        <div class="card mb-2">
+          <div class="card-header">填写记录 ${idx+1}（${item.submitTime}）</div>
+          <div class="card-body">
+            <p><strong>部门：</strong>${item.dept}</p>
+            <p><strong>在岗时长：</strong>${item.workDuration}</p>
+            <p><strong>优化建议：</strong>${item.suggestion1}</p>
+            <p><strong>其他反馈：</strong>${item.suggestion2}</p>
+          </div>
+        </div>
+      `;
+    });
+    suggestionsList.innerHTML = suggestionsHtml;
+  }
+
+  // 导出Excel
+  function exportExcel() {
+    const allSurveyData = JSON.parse(localStorage.getItem('allSurveyData')) || [];
+    if (allSurveyData.length === 0) {
+      alert('暂无数据可导出！');
+      return;
+    }
+
+    const headers = ['提交时间', '所在部门', '在岗时长', '排班频率满意度', '排班合理性', '优化建议', '其他反馈'];
+    const data = [headers];
+
+    allSurveyData.forEach(item => {
+      data.push([
+        item.submitTime,
+        item.dept,
+        item.workDuration,
+        item.satisfaction1,
+        item.satisfaction2,
+        item.suggestion1,
+        item.suggestion2
+      ]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '排班调研汇总数据');
+    XLSX.writeFile(wb, `排班调研汇总报表_${new Date().toISOString().split('T')[0]}.xlsx`);
+    alert('Excel汇总报表导出成功！');
+  }
+</script>
+</body>
+</html>

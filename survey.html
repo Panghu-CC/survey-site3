@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>问卷填写 - 匿名排班满意度调研</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+.survey-module.d-none { display: none !important; }
+.survey-module.active { display: block; }
+</style>
+</head>
+<body>
+<div class="sticky-top bg-primary text-white py-2 text-center">本次调研全程匿名，所有答案仅用于排班优化</div>
+<div class="container mt-4">
+  <div class="progress mb-4" style="height: 20px;">
+    <div id="progressBar" class="progress-bar" role="progressbar" style="width: 33%;" aria-valuenow="33" aria-valuemin="0" aria-valuemax="100">1/3 基本信息</div>
+  </div>
+  <div class="row">
+    <div class="col-md-8">
+      <div id="surveyContent">
+        <!-- 模块1：基本信息 -->
+        <div id="module1" class="survey-module active">
+          <h3 class="mb-4">基本信息（可选填写）</h3>
+          <div class="mb-3">
+            <label class="form-label">所在部门</label>
+            <input type="text" class="form-control" id="dept" placeholder="如：运营部、技术部（可选）">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">在岗时长</label>
+            <select class="form-select" id="workDuration">
+              <option value="">请选择（可选）</option>
+              <option value="1年以内">1年以内</option>
+              <option value="1-3年">1-3年</option>
+              <option value="3-5年">3-5年</option>
+              <option value="5年以上">5年以上</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 模块2：核心问题 -->
+        <div id="module2" class="survey-module d-none">
+          <h3 class="mb-4">排班满意度核心问题 <span class="text-danger">*</span></h3>
+          <div class="mb-4">
+            <label class="form-label">1. 您对当前排班频率的满意度？ <span class="text-danger">*</span></label>
+            <div class="form-check"><input class="form-check-input" type="radio" name="satisfaction1" id="s1-1" value="非常满意">
+              <label class="form-check-label" for="s1-1">非常满意</label></div>
+            <div class="form-check"><input class="form-check-input" type="radio" name="satisfaction1" id="s1-2" value="满意">
+              <label class="form-check-label" for="s1-2">满意</label></div>
+            <div class="form-check"><input class="form-check-input" type="radio" name="satisfaction1" id="s1-3" value="一般">
+              <label class="form-check-label" for="s1-3">一般</label></div>
+            <div class="form-check"><input class="form-check-input" type="radio" name="satisfaction1" id="s1-4" value="不满意">
+              <label class="form-check-label" for="s1-4">不满意</label></div>
+            <div class="form-check"><input class="form-check-input" type="radio" name="satisfaction1" id="s1-5" value="非常不满意">
+              <label class="form-check-label" for="s1-5">非常不满意</label></div>
+          </div>
+          <div class="mb-4">
+            <label class="form-label">2. 您认为当前排班是否合理？ <span class="text-danger">*</span></label>
+            <div class="form-check"><input class="form-check-input" type="radio" name="satisfaction2" id="s2-1" value="非常合理">
+              <label class="form-check-label" for="s2-1">非常合理</label></div>
+            <div class="form-check"><input class="form-check-input" type="radio" name="satisfaction2" id="s2-2" value="合理">
+              <label class="form-check-label" for="s2-2">合理</label></div>
+            <div class="form-check"><input class="form-check-input" type="radio" name="satisfaction2" id="s2-3" value="一般">
+              <label class="form-check-label" for="s2-3">一般</label></div>
+            <div class="form-check"><input class="form-check-input" type="radio" name="satisfaction2" id="s2-4" value="不合理">
+              <label class="form-check-label" for="s2-4">不合理</label></div>
+            <div class="form-check"><input class="form-check-input" type="radio" name="satisfaction2" id="s2-5" value="非常不合理">
+              <label class="form-check-label" for="s2-5">非常不合理</label></div>
+          </div>
+        </div>
+
+        <!-- 模块3：开放性问题 -->
+        <div id="module3" class="survey-module d-none">
+          <h3 class="mb-4">开放性问题</h3>
+          <div class="mb-4">
+            <label class="form-label">1. 您对当前排班有哪些具体的优化建议？</label>
+            <textarea class="form-control" id="suggestion1" rows="5" placeholder="请输入您的建议（可自动换行）"></textarea>
+          </div>
+          <div class="mb-4">
+            <label class="form-label">2. 您是否有其他想反馈的内容？</label>
+            <textarea class="form-control" id="suggestion2" rows="3"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- 翻页按钮 -->
+      <div class="d-flex justify-content-between mt-5">
+        <button id="prevBtn" class="btn btn-secondary">上一题</button>
+        <button id="nextBtn" class="btn btn-primary">下一题</button>
+        <button id="submitBtn" class="btn btn-success d-none">提交问卷</button>
+      </div>
+    </div>
+
+    <!-- 侧边导航 -->
+    <div class="col-md-4">
+      <div class="card sticky-top" style="top: 80px;">
+        <div class="card-header">问卷导航</div>
+        <div class="card-body">
+          <ul class="list-group">
+            <li class="list-group-item active" onclick="switchModule(1)">1. 基本信息（可选）</li>
+            <li class="list-group-item" onclick="switchModule(2)">2. 排班满意度核心问题 <span class="text-danger">*</span></li>
+            <li class="list-group-item" onclick="switchModule(3)">3. 开放性问题</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  let currentModule = 1;
+  const totalModules = 3;
+
+  // 切换模块
+  function switchModule(moduleNum) {
+    if (currentModule === 2 && !validateRequired()) {
+      alert('核心问题为必填项，请至少选择一个答案！');
+      return;
+    }
+    document.getElementById(`module${currentModule}`).classList.add('d-none');
+    document.getElementById(`module${currentModule}`).classList.remove('active');
+    document.getElementById(`module${moduleNum}`).classList.remove('d-none');
+    document.getElementById(`module${moduleNum}`).classList.add('active');
+    
+    document.querySelectorAll('.list-group-item').forEach((item, idx) => {
+      item.classList.remove('active');
+      if (idx + 1 === moduleNum) item.classList.add('active');
+    });
+
+    currentModule = moduleNum;
+    const progress = (moduleNum / totalModules) * 100;
+    const progressText = {
+      1: '1/3 基本信息',
+      2: '2/3 排班满意度核心问题',
+      3: '3/3 开放性问题'
+    };
+    const progressBar = document.getElementById('progressBar');
+    progressBar.style.width = `${progress}%`;
+    progressBar.textContent = progressText[moduleNum];
+
+    document.getElementById('prevBtn').disabled = moduleNum === 1;
+    document.getElementById('nextBtn').classList.toggle('d-none', moduleNum === 3);
+    document.getElementById('submitBtn').classList.toggle('d-none', moduleNum !== 3);
+  }
+
+  // 按钮绑定
+  document.getElementById('prevBtn').addEventListener('click', () => {
+    if (currentModule > 1) switchModule(currentModule - 1);
+  });
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    if (currentModule < 3) switchModule(currentModule + 1);
+  });
+
+  // 验证必填项
+  function validateRequired() {
+    const s1 = document.querySelector('input[name="satisfaction1"]:checked');
+    const s2 = document.querySelector('input[name="satisfaction2"]:checked');
+    return !!s1 && !!s2;
+  }
+
+  // 提交问卷（核心：正确存储数据）
+  document.getElementById('submitBtn').addEventListener('click', () => {
+    if (!validateRequired()) {
+      alert('核心问题为必填项，请完成填写后提交！');
+      return;
+    }
+
+    // 收集所有填写数据
+    const surveyData = {
+      dept: document.getElementById('dept').value || '未填写',
+      workDuration: document.getElementById('workDuration').value || '未填写',
+      satisfaction1: document.querySelector('input[name="satisfaction1"]:checked').value,
+      satisfaction2: document.querySelector('input[name="satisfaction2"]:checked').value,
+      suggestion1: document.getElementById('suggestion1').value || '无',
+      suggestion2: document.getElementById('suggestion2').value || '无',
+      submitTime: new Date().toLocaleString() // 记录提交时间
+    };
+
+    // 读取已有数据，若无则初始化空数组
+    let allSurveyData = JSON.parse(localStorage.getItem('allSurveyData')) || [];
+    // 添加新提交的问卷数据
+    allSurveyData.push(surveyData);
+    // 重新存入localStorage（关键！）
+    localStorage.setItem('allSurveyData', JSON.stringify(allSurveyData));
+
+    alert('问卷提交成功！');
+    window.location.href = 'success.html';
+  });
+</script>
+</body>
+</html>
